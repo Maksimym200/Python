@@ -1,5 +1,6 @@
 from sys import stdout as _out
 from sys import stdin as _in
+from string import ascii_letters as _letters
 import json as _json
 from collections import Counter as _Counter
 
@@ -62,23 +63,23 @@ def _get_frequency_data(_data):
     _data_size = sum(_data.values())
     for _s in _data:
         _frequency_data[_s] = (_data[_s] / _data_size)
-    for i in range(128):
-        if not(chr(i) in _frequency_data):
-            _frequency_data[chr(i)] = 0
+    for _i in _letters:
+        if not(_i in _frequency_data):
+            _frequency_data[_i] = 0
     return _frequency_data
 
 def _get_key(_frequency_data, _model):
     _key = 0
     _similarity = 1
     for _i in range(26):
-        _current_simularity = 0
+        _current_similarity = 0
         for _s in _model:
             if _encode_symbol(_i, _s) not in _frequency_data:
-                _current_simularity += _model[_s]
+                _current_similarity += _model[_s]
             else:
-               _current_simularity += abs(_frequency_data[_encode_symbol(_i, _s)] - _model[_s])
-        if (_current_simularity <= _similarity):
-            _similarity = _current_simularity
+               _current_similarity += abs(_frequency_data[_encode_symbol(_i, _s)] - _model[_s])
+        if (_current_similarity <= _similarity):
+            _similarity = _current_similarity
             _key = _i
     return _key
 
@@ -91,7 +92,8 @@ def stream_train(_input, _model):
             break
         if _s == "":
             break
-        _data += _Counter({_s})
+        if _s.isalpha():
+            _data += _Counter({_s})
     _json.dump(_get_frequency_data(_data), _model)
 
 def stream_hack(_input, _output, _model):
@@ -104,7 +106,8 @@ def stream_hack(_input, _output, _model):
             break
         if _s == "":
             break
-        _text_data += _Counter({_s})
+        if _s.isalpha():
+            _text_data += _Counter({_s})
         _text.append(_s)
     _text_frequency_data = _get_frequency_data(_text_data)
     _key = _get_key(_text_frequency_data, _model)
