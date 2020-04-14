@@ -31,4 +31,4 @@ if args.action == "hack":
     if args.cipher == "caesar":
         _caesar.hack(args.input_file, args.output_file, args.model_file)
     if args.cipher == "vigenere":
-        print("Unsupported")
+        _vigenere.hack(args.input_file, args.output_file, args.model_file)
