@@ -3,6 +3,7 @@ from sys import stdin
 import json
 from collections import Counter
 from string import ascii_lowercase as letters
+letters_indexes = {letters[i] : i for i in range(len(letters))}
 
 def get_name_supporing_function(f):
     def name_supporing_function(*args):
@@ -26,9 +27,9 @@ def encode_symbol(key, s):
     if not s.isalpha():
         return s
     elif s.islower():
-        return chr((ord(s) - ord('a') + key) % 26 + ord('a'))
+        return letters[(letters_indexes[s] + key) % len(letters)]
     else:
-        return chr((ord(s) - ord('A') + key) % 26 + ord('A'))
+        return letters[(letters_indexes[s.lower()] + key) % len(letters)].upper()
 
 def stream_encode(input, output, key):
     index = 0
@@ -39,7 +40,7 @@ def stream_encode(input, output, key):
             break
         if s == "":
             break
-        output.write(encode_symbol(ord(key[index]), s))
+        output.write(encode_symbol(letters_indexes[key[index].lower()], s))
         index = (index + 1) % len(key)
 
 def stream_decode(input, output, key):
@@ -51,7 +52,7 @@ def stream_decode(input, output, key):
             break
         if s == "":
             break
-        output.write(encode_symbol(-ord(key[index]), s))
+        output.write(encode_symbol(-letters_indexes[key[index].lower()], s))
         index = (index + 1) % len(key)
 
 def get_data_list(text, key):
@@ -107,7 +108,7 @@ def get_key(text, model):
     for j in range(key_len):
         key_symbol = 0
         similarity = 1
-        for i in range(26):
+        for i in range(len(letters)):
             current_similarity = 0
             for s in model:
                 current_similarity += abs(frequency_data_list[j][encode_symbol(i, s)] - model[s])
