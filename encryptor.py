@@ -2,6 +2,7 @@ import argparse
 import caesar
 import vigenere
 import vernam
+import hack
 
 parser = argparse.ArgumentParser()
 parser.add_argument("action", type = str, choices = ["encode", "decode", "train", "hack"])
@@ -30,10 +31,7 @@ if args.action == "decode":
         vernam.decode(args.input_file, args.output_file, str(args.key))
 
 if args.action == "train":
-    caesar.train(args.text_file, args.model_file)
+    hack.train(args.text_file, args.model_file)
 
 if args.action == "hack":
-    if args.cipher == "caesar":
-        caesar.hack(args.input_file, args.output_file, args.model_file)
-    if args.cipher == "vigenere":
-        vigenere.hack(args.input_file, args.output_file, args.model_file)
+    hack.hack(args.input_file, args.output_file, args.model_file)
