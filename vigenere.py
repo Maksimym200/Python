@@ -1,159 +1,156 @@
-from sys import stdout as _out
-from sys import stdin as _in
-import json as _json
-from collections import Counter as _Counter
-from string import ascii_letters as _letters
+from sys import stdout
+from sys import stdin
+import json
+from collections import Counter
+from string import ascii_lowercase as letters
 
-def _encode_symbol(_key, _s):
-    if not _s.isalpha():
-        return _s
-    elif _s.islower():
-        return chr((ord(_s) - ord('a') + _key) % 26 + ord('a'))
+def get_name_supporing_function(f):
+    def name_supporing_function(*args):
+        if args[0] == None:
+            if args[1] == None:
+                f(stdin, stdout, *args[2:])
+            else:
+                with open(args[1], 'w') as output:
+                    f(stdin, output, *args[2:])
+        else:
+            if args[1] == None:
+                with open(args[0], 'r') as input:
+                    f(input, stdout, *args[2:])
+            else:
+                with open(args[0], 'r') as input:
+                    with open(args[1], 'w') as output:
+                        f(input, output, *args[2:])
+    return name_supporing_function
+
+def encode_symbol(key, s):
+    if not s.isalpha():
+        return s
+    elif s.islower():
+        return chr((ord(s) - ord('a') + key) % 26 + ord('a'))
     else:
-        return chr((ord(_s) - ord('A') + _key) % 26 + ord('A'))
+        return chr((ord(s) - ord('A') + key) % 26 + ord('A'))
 
-def stream_encode(_key, _input, _output):
+def stream_encode(input, output, key):
     index = 0
     while True:
         try:
-            _s = _input.read(1)
+            s = input.read(1)
         except:
             break
-        if _s == "":
+        if s == "":
             break
-        _output.write(_encode_symbol(ord(_key[index]), _s))
-        index = (index + 1) % len(_key)
+        output.write(encode_symbol(ord(key[index]), s))
+        index = (index + 1) % len(key)
 
-def stream_decode(_key, _input, _output):
+def stream_decode(input, output, key):
     index = 0
     while True:
         try:
-            _s = _input.read(1)
+            s = input.read(1)
         except:
             break
-        if _s == "":
+        if s == "":
             break
-        _output.write(_encode_symbol(-ord(_key[index]), _s))
-        index = (index + 1) % len(_key)
+        output.write(encode_symbol(-ord(key[index]), s))
+        index = (index + 1) % len(key)
 
-def encode(_key, _input_name, _output_name):
-    _input = _in
-    _output = _out
-    if _input_name != None:
-        _input = open(_input_name, 'r')
-    if _output_name != None:
-        _output = open(_output_name, 'w')
-    stream_encode(str(_key), _input, _output)
-    if _input_name != None:
-        _input.close()
-    if _output_name != None:
-        _output.close()
+def get_data_list(text, key):
+    data_list = []
+    for i in range(key):
+        data_list.append(Counter())
+    for i in range(len(text)):
+        if text[i].isalpha():
+            data_list[i % key] += Counter({text[i].lower()})
+    return data_list
 
-def decode(_key, _input_name, _output_name):
-    _input = _in
-    _output = _out
-    if _input_name != None:
-        _input = open(_input_name, 'r')
-    if _output_name != None:
-        _output = open(_output_name, 'w')
-    stream_decode(str(_key), _input, _output)
-    if _input_name != None:
-        _input.close()
-    if _output_name != None:
-        _output.close()
+def get_frequency_data(data):
+    frequency_data = dict()
+    data_size = sum(data.values())
+    for s in data:
+        frequency_data[s] = (data[s] / data_size)
+    for i in letters:
+        if not(i in frequency_data):
+            frequency_data[i] = 0
+    return frequency_data
 
-def _get_data_list(_text, _key):
-    _data_list = []
-    for _i in range(_key):
-        _data_list.append(_Counter())
-    for _i in range(len(_text)):
-        if _text[_i].isalpha():
-            _data_list[_i % _key] += _Counter({_text[_i]})
-    return _data_list
+def index_of_coincidence(frequency_data):
+    index = 0
+    for s in frequency_data:
+        index += (frequency_data[s] ** 2)
+    return index
 
-def _get_frequency_data(_data):
-    _frequency_data = dict()
-    _data_size = sum(_data.values())
-    for _s in _data:
-        _frequency_data[_s] = (_data[_s] / _data_size)
-    for _i in _letters:
-        if not(_i in _frequency_data):
-            _frequency_data[_i] = 0
-    return _frequency_data
-
-def _index_of_coincidence(_frequency_data):
-    _index = 0
-    for _s in _frequency_data:
-        _index += (_frequency_data[_s] ** 2)
-    return _index
-
-def _get_correct_frequency_data_list(_text, _index):
-    _correct_frequency_data_list = []
-    _current_index = 0
-    for _i in range(1, len(_text) + 1, 1):
-        _data_list = _get_data_list(_text, _i)
-        _frequency_data_list = []
-        _average_index = 0
-        for _j in range(_i):
-            _frequency_data_list.append(_get_frequency_data(_data_list[_j]))
-            _average_index += _index_of_coincidence(_frequency_data_list[_j])
-        _average_index /= _i
-        if (_average_index > _current_index):
-            _correct_frequency_data_list = _frequency_data_list
-            _current_index = _average_index
-        if abs(_average_index - _index) < 0.005:
-            return _frequency_data_list
-    return _correct_frequency_data_list
+def get_correct_frequency_data_list(text, index):
+    correct_frequency_data_list = []
+    current_index = 0
+    for i in range(1, len(text) + 1, 1):
+        data_list = get_data_list(text, i)
+        frequency_data_list = []
+        average_index = 0
+        for j in range(i):
+            frequency_data_list.append(get_frequency_data(data_list[j]))
+            average_index += index_of_coincidence(frequency_data_list[j])
+        average_index /= i
+        if (average_index > current_index):
+            correct_frequency_data_list = frequency_data_list
+            current_index = average_index
+        if abs(average_index - index) < 0.005:
+            return frequency_data_list
+    return correct_frequency_data_list
 
         
-def _get_key(_text, _model):
-    _index = _index_of_coincidence(_get_frequency_data(_model))
-    _frequency_data_list = _get_correct_frequency_data_list(_text, _index)
-    _key_len = len(_frequency_data_list)
-    print(_key_len)
-    _key = []
-    for _j in range(_key_len):
-        _key_symbol = 0
-        _similarity = 1
-        for _i in range(26):
-            _current_similarity = 0
-            for _s in _model:
-                if _encode_symbol(_i, _s) not in _frequency_data_list[_j]:
-                    _current_similarity += _model[_s]
-                else:
-                    _current_similarity += abs(_frequency_data_list[_j][_encode_symbol(_i, _s)] - _model[_s])
-            if (_current_similarity <= _similarity):
-                _similarity = _current_similarity
-                _key_symbol = _i
-        _key.append(_key_symbol)
-    return _key
+def get_key(text, model):
+    index = index_of_coincidence(get_frequency_data(model))
+    frequency_data_list = get_correct_frequency_data_list(text, index)
+    key_len = len(frequency_data_list)
+    print(key_len)
+    key = []
+    for j in range(key_len):
+        key_symbol = 0
+        similarity = 1
+        for i in range(26):
+            current_similarity = 0
+            for s in model:
+                current_similarity += abs(frequency_data_list[j][encode_symbol(i, s)] - model[s])
+            if (current_similarity <= similarity):
+                similarity = current_similarity
+                key_symbol = i
+        key.append(key_symbol)
+    return key
 
 
-def stream_hack(_input, _output, _model):
-    _text = []
+def stream_hack(input, output, model_name):
+    with open(model_name, "r") as model_encoded:
+        model = json.load(model_encoded)
+    text = []
     while True:
         try:
-            _s = _input.read(1)
+            s = input.read(1)
         except:
             break
-        if _s == "":
+        if s == "":
             break
-        _text.append(_s)
-    _key = _get_key(_text, _model)
-    for i in range(len(_text)):
-        _output.write(_encode_symbol(-_key[i % len(_key)], _text[i]))
+        text.append(s)
+    key = get_key(text, model)
+    for i in range(len(text)):
+        output.write(encode_symbol(-key[i % len(key)], text[i]))
 
-def hack(_input_name, _output_name, _model_name):
-    _input = _in
-    _output = _out
-    if _input_name != None:
-        _input = open(_input_name, 'r')
-    if _output_name != None:
-        _output = open(_output_name, 'w')
-    with open(_model_name, "r") as _model_encoded:
-        _model = _json.load(_model_encoded)
-    stream_hack(_input, _output, _model)
-    if _input_name != None:
-        _input.close()
-    if _output_name != None:
-        _output.close()
+def stream_train(input, model):
+    data = Counter()
+    while True:
+        try:
+            s = input.read(1)
+        except:
+            break
+        if s == "":
+            break
+        if s.isalpha():
+            data += Counter({s.lower()})
+    json.dump(get_frequency_data(data), model)
+
+decode = get_name_supporing_function(stream_decode)
+
+encode = get_name_supporing_function(stream_encode)
+
+hack = get_name_supporing_function(stream_hack)
+
+train = get_name_supporing_function(stream_train)
