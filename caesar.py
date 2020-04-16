@@ -2,8 +2,6 @@ from sys import stdout
 from sys import stdin
 from string import ascii_lowercase as letters
 letters_indexes = {letters[i] : i for i in range(len(letters))}
-import json
-from collections import Counter
 
 def get_name_supporing_function(f):
     def name_supporing_function(*args):
@@ -67,43 +65,6 @@ def get_key(frequency_data, model):
             key = i
     return key
 
-def stream_train(input, model):
-    data = Counter()
-    while True:
-        try:
-            s = input.read(1)
-        except:
-            break
-        if s == "":
-            break
-        if s.isalpha():
-            data += Counter({s.lower()})
-    json.dump(get_frequency_data(data), model)
-
-def stream_hack(input, output, model_name):
-    with open(model_name, "r") as model_encoded:
-        model = json.load(model_encoded)
-    text = []
-    text_data = Counter()
-    while True:
-        try:
-            s = input.read(1)
-        except:
-            break
-        if s == "":
-            break
-        if s.isalpha():
-            text_data += Counter({s.lower()})
-        text.append(s)
-    text_frequency_data = get_frequency_data(text_data)
-    key = get_key(text_frequency_data, model)
-    for i in range(len(text)):
-        output.write(encode_symbol(-key, text[i]))
-
 encode = get_name_supporing_function(stream_encode)
 
 decode = get_name_supporing_function(stream_decode)
-
-train = get_name_supporing_function(stream_train)
-
-hack = get_name_supporing_function(stream_hack)
