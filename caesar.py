@@ -43,28 +43,6 @@ def stream_encode(input, output, key):
 def stream_decode(input, output, key):
     stream_encode(input, output, -key)
 
-def get_frequency_data(data):
-    frequency_data = dict()
-    data_size = sum(data.values())
-    for s in data:
-        frequency_data[s] = (data[s] / data_size)
-    for i in letters:
-        if not(i in frequency_data):
-            frequency_data[i] = 0
-    return frequency_data
-
-def get_key(frequency_data, model):
-    key = 0
-    similarity = 1
-    for i in range(len(letters)):
-        current_similarity = 0
-        for s in model:
-            current_similarity += abs(frequency_data[encode_symbol(i, s)] - model[s])
-        if (current_similarity <= similarity):
-            similarity = current_similarity
-            key = i
-    return key
-
 encode = get_name_supporing_function(stream_encode)
 
 decode = get_name_supporing_function(stream_decode)
