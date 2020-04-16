@@ -49,5 +49,3 @@ def stream_decode(input, output, key):
 encode = get_name_supporing_function(stream_encode)
 
 decode = get_name_supporing_function(stream_decode)
-
-encode(None, "1.txt", "Maksim")
