@@ -103,7 +103,6 @@ def get_key(text, model):
     index = index_of_coincidence(get_frequency_data(model))
     frequency_data_list = get_correct_frequency_data_list(text, index)
     key_len = len(frequency_data_list)
-    print(key_len)
     key = []
     for j in range(key_len):
         key_symbol = 0
