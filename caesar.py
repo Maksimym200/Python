@@ -1,6 +1,7 @@
 from sys import stdout
 from sys import stdin
 from string import ascii_lowercase as letters
+letters_indexes = {letters[i] : i for i in range(len(letters))}
 import json
 from collections import Counter
 
@@ -27,9 +28,9 @@ def encode_symbol(key, s):
     if not s.isalpha():
         return s
     elif s.islower():
-        return chr((ord(s) - ord('a') + key) % 26 + ord('a'))
+        return letters[(letters_indexes[s] + key) % len(letters)]
     else:
-        return chr((ord(s) - ord('A') + key) % 26 + ord('A'))
+        return letters[(letters_indexes[s.lower()] + key) % len(letters)].upper()
 
 def stream_encode(input, output, key):
     while True:
@@ -57,7 +58,7 @@ def get_frequency_data(data):
 def get_key(frequency_data, model):
     key = 0
     similarity = 1
-    for i in range(26):
+    for i in range(len(letters)):
         current_similarity = 0
         for s in model:
             current_similarity += abs(frequency_data[encode_symbol(i, s)] - model[s])
