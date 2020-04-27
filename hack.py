@@ -1,35 +1,22 @@
-from sys import stdout
-from sys import stdin
 import json
 from collections import Counter
-from string import ascii_lowercase as letters
-letters_indexes = {letters[i] : i for i in range(len(letters))}
 
-def get_name_supporing_function(f):
-    def name_supporing_function(*args):
-        if args[0] == None:
-            if args[1] == None:
-                f(stdin, stdout, *args[2:])
-            else:
-                with open(args[1], 'w') as output:
-                    f(stdin, output, *args[2:])
-        else:
-            if args[1] == None:
-                with open(args[0], 'r') as input:
-                    f(input, stdout, *args[2:])
-            else:
-                with open(args[0], 'r') as input:
-                    with open(args[1], 'w') as output:
-                        f(input, output, *args[2:])
-    return name_supporing_function
+letters = []
+letters_indexes = dir()
+
+def import_alphabet(_letters, _letters_indexes):
+    global letters
+    global letters_indexes
+    letters = _letters
+    letters_indexes = _letters_indexes  
 
 def encode_symbol(key, s):
-    if not s.isalpha():
-        return s
-    elif s.islower():
+    if s in letters_indexes:
         return letters[(letters_indexes[s] + key) % len(letters)]
-    else:
+    elif s.lower() in letters_indexes:
         return letters[(letters_indexes[s.lower()] + key) % len(letters)].upper()
+    else:
+        return s
 
 def get_data_list(text, key):
     data_list = []
@@ -94,35 +81,24 @@ def get_key(text, model):
     return key
 
 
-def stream_hack(input, output, model_name):
+def hack(input, output, model_name):
     with open(model_name, "r") as model_encoded:
         model = json.load(model_encoded)
-    text = []
-    while True:
-        try:
-            s = input.read(1)
-        except:
-            break
-        if s == "":
-            break
-        text.append(s)
+    text = list(input.read())
     key = get_key(text, model)
+    hacked_str = []
     for i in range(len(text)):
-        output.write(encode_symbol(-key[i % len(key)], text[i]))
+        hacked_str.append(encode_symbol(-key[i % len(key)], text[i]))
+        if len(hacked_str) == 1024:
+            output.write("".join(hacked_str))
+            hacked_str.clear()
+    output.write("".join(hacked_str))
 
-def stream_train(input, model):
+
+def train(input, model):
     data = Counter()
-    while True:
-        try:
-            s = input.read(1)
-        except:
-            break
-        if s == "":
-            break
-        if s.isalpha():
+    text = input.read()
+    for s in text:
+        if s.lower() in letters_indexes:
             data += Counter({s.lower()})
     json.dump(get_frequency_data(data), model)
-
-hack = get_name_supporing_function(stream_hack)
-
-train = get_name_supporing_function(stream_train)
