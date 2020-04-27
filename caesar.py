@@ -1,48 +1,29 @@
-from sys import stdout
-from sys import stdin
-from string import ascii_lowercase as letters
-letters_indexes = {letters[i] : i for i in range(len(letters))}
+letters = []
+letters_indexes = dir()
 
-def get_name_supporing_function(f):
-    def name_supporing_function(*args):
-        if args[0] == None:
-            if args[1] == None:
-                f(stdin, stdout, *args[2:])
-            else:
-                with open(args[1], 'w') as output:
-                    f(stdin, output, *args[2:])
-        else:
-            if args[1] == None:
-                with open(args[0], 'r') as input:
-                    f(input, stdout, *args[2:])
-            else:
-                with open(args[0], 'r') as input:
-                    with open(args[1], 'w') as output:
-                        f(input, output, *args[2:])
-    return name_supporing_function
-        
+def import_alphabet(_letters, _letters_indexes):
+    global letters
+    global letters_indexes
+    letters = _letters
+    letters_indexes = _letters_indexes  
 
 def encode_symbol(key, s):
-    if not s.isalpha():
-        return s
-    elif s.islower():
+    if s in letters_indexes:
         return letters[(letters_indexes[s] + key) % len(letters)]
-    else:
+    elif s.lower() in letters_indexes:
         return letters[(letters_indexes[s.lower()] + key) % len(letters)].upper()
+    else:
+        return s
 
-def stream_encode(input, output, key):
-    while True:
-        try:
-            s = input.read(1)
-        except:
+def encode(input, output, key):
+    while not input.closed:
+        part = input.read(1024)
+        encoded_str = []
+        for s in part:
+            encoded_str.append(encode_symbol(key, s))
+        output.write("".join(encoded_str))
+        if len(part) < 1024:
             break
-        if s == "":
-            break
-        output.write(encode_symbol(key, s))
 
-def stream_decode(input, output, key):
-    stream_encode(input, output, -key)
-
-encode = get_name_supporing_function(stream_encode)
-
-decode = get_name_supporing_function(stream_decode)
+def decode(input, output, key):
+    encode(input, output, -key)
