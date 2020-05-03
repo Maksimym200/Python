@@ -1,11 +1,6 @@
-letters = []
-letters_indexes = dir()
-
-def import_alphabet(_letters, _letters_indexes):
-    global letters
-    global letters_indexes
-    letters = _letters
-    letters_indexes = _letters_indexes  
+from alphabet import letters
+from alphabet import indexes as letters_indexes
+packet_size = 1024
 
 def encode_symbol(key_s, s):
     
@@ -19,16 +14,14 @@ def encode_symbol(key_s, s):
 
 def encode(input, output, key):
     while True:
-        part = input.read(1024)
-        if part == "":
-            break
+        packet = input.read(packet_size)
         encoded_str = []
         index = 0
-        for s in part:
+        for s in packet:
             encoded_str.append(encode_symbol(key[index], s))
             index = (index + 1) % len(key)
         output.write("".join(encoded_str))
-        if len(part) < 1024:
+        if len(packet) < packet_size:
             break
 
 def decode(input, output, key):
