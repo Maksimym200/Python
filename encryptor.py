@@ -34,7 +34,7 @@ def decode(args):
 def train(args):
     with open_input(args.text_file) as text:
         with open_output(args.model_file) as model:
-            hack.train(text, model)
+            _hack.train(text, model)
 
 def hack(args):
     with open_input(args.input_file) as input:
