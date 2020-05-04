@@ -29,7 +29,7 @@ def decode(input, output, key):
     for s in text:
         encoded_str.append(encode_symbol(-letters_indexes[key[index].lower()], s))
         index = (index + 1) % len(key)
-        if len(encoded_str) == 1024:
+        if len(encoded_str) == packet_size:
             output.write("".join(encoded_str))
             encoded_str = []
     output.write("".join(encoded_str))
