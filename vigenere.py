@@ -10,26 +10,20 @@ def encode_symbol(key, s):
     else:
         return s
 
-def encode(input, output, key):
+def encode_with_shift(input, output, key, shift = 1):
     while True:
         packet = input.read(packet_size)
         encoded_str = []
         index = 0
         for s in packet:
-            encoded_str.append(encode_symbol(letters_indexes[key[index].lower()], s))
+            encoded_str.append(encode_symbol(shift * letters_indexes[key[index].lower()], s))
             index = (index + 1) % len(key)
         output.write("".join(encoded_str))
         if len(packet) < packet_size:
             break
 
+def encode(input, output, key):
+    encode_with_shift(input, output, key)
+
 def decode(input, output, key):
-    text = input.read()
-    encoded_str = []
-    index = 0
-    for s in text:
-        encoded_str.append(encode_symbol(-letters_indexes[key[index].lower()], s))
-        index = (index + 1) % len(key)
-        if len(encoded_str) == packet_size:
-            output.write("".join(encoded_str))
-            encoded_str = []
-    output.write("".join(encoded_str))
+    encode_with_shift(input, output, key, -1)
