@@ -1,18 +1,20 @@
 import json
-from collections import Counter
 from alphabet import letters
 from alphabet import indexes as letters_indexes
-from caesar import encode_symbol
+from vigenere import encode_symbol
 packet_size = 1024
 accuracy = 0.005
 
-def get_data_list(text, key):
+def get_data_list(text, key_len):
     data_list = []
-    for i in range(key):
-        data_list.append(Counter())
+    for i in range(key_len):
+        data_list.append(dict())
     for i in range(len(text)):
         if text[i].isalpha():
-            data_list[i % key] += Counter({text[i].lower()})
+            if not text[i].lower() in data_list[i % key_len]:
+                data_list[i % key_len][text[i].lower()] = 1
+            else:
+                data_list[i % key_len][text[i].lower()] += 1
     return data_list
 
 def get_frequency_data(data):
@@ -34,7 +36,10 @@ def index_of_coincidence(frequency_data):
 def get_correct_frequency_data_list(text, index):
     correct_frequency_data_list = []
     current_index = 0
-    for key_len in range(1, len(text) + 1, 1):
+    max_len = len(text) / 2
+    key_len = 0
+    while (key_len <= max_len):
+        key_len += 1
         data_list = get_data_list(text, key_len)
         frequency_data_list = []
         average_index = 0
@@ -45,8 +50,8 @@ def get_correct_frequency_data_list(text, index):
         if (average_index > current_index):
             correct_frequency_data_list = frequency_data_list
             current_index = average_index
-        if abs(average_index - index) < accuracy:
-            return frequency_data_list
+        if abs(average_index - index) < accuracy and max_len == len(text) / 2:
+            max_len = key_len * 2
     return correct_frequency_data_list
 
         
@@ -66,7 +71,6 @@ def get_key(text, model):
                 similarity = current_similarity
                 key_symbol = i
         key.append(key_symbol)
-    print(key)
     return key
 
 
@@ -83,12 +87,15 @@ def hack(input, output, model_encoded):
 
 
 def train(input, model):
-    data = Counter()
+    data = dict()
     while True:
         packet = input.read(packet_size)
         for s in packet:
             if s.lower() in letters_indexes:
-                data += Counter({s.lower()})
+                if not s.lower() in data:
+                    data[s.lower()] = 1
+                else:
+                    data[s.lower()] += 1
         if len(packet) < packet_size:
             break
     json.dump(get_frequency_data(data), model)
