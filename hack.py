@@ -2,23 +2,21 @@ import json
 from alphabet import letters
 from alphabet import indexes as letters_indexes
 from vigenere import encode_symbol
+from collections import defaultdict
 packet_size = 1024
 accuracy = 0.005
 
 def get_data_list(text, key_len):
-    data_list = []
-    for i in range(key_len):
-        data_list.append(dict())
-    for i in range(len(text)):
-        if text[i].isalpha():
-            if not text[i].lower() in data_list[i % key_len]:
-                data_list[i % key_len][text[i].lower()] = 1
-            else:
+        data_list = []
+        for i in range(key_len):
+            data_list.append(defaultdict(int))
+        for i in range(len(text)):
+            if text[i].isalpha():
                 data_list[i % key_len][text[i].lower()] += 1
-    return data_list
+        return data_list
 
 def get_frequency_data(data):
-    frequency_data = dict()
+    frequency_data = defaultdict(int)
     data_size = sum(data.values())
     for s in data:
         frequency_data[s] = (data[s] / data_size)
@@ -87,15 +85,12 @@ def hack(input, output, model_encoded):
 
 
 def train(input, model):
-    data = dict()
+    data = defaultdict(int)
     while True:
         packet = input.read(packet_size)
         for s in packet:
             if s.lower() in letters_indexes:
-                if not s.lower() in data:
-                    data[s.lower()] = 1
-                else:
-                    data[s.lower()] += 1
+                data[s.lower()] += 1
         if len(packet) < packet_size:
             break
     json.dump(get_frequency_data(data), model)
