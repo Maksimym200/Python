@@ -134,7 +134,7 @@ def help():
     print(' - info {alphabet / model} : get alphabet or model information')
     print(' - add {alphabet / model} : add alphabet or model')
     print(' - encode : encode text with vigenere cipher')
-    print(' - decode : decode input with vigenere cipher')
+    print(' - decode : decode text with vigenere cipher')
     print(' - hack : hack encoded text')
     print(' - exit : exit the program')
 
