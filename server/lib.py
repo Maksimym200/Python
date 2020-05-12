@@ -23,6 +23,8 @@ class Data:
         alphabet = self.get_alphabet(ID)
         if alphabet == None:
             return ' Error# Alphabet not found'
+        if len(set(alphabet['letters']) & set(input)) == 0:
+            return ' Error# Incorrect model. Model should contain symbols in alphabet'
         index = str(len(self.models))
         self.models[index] = (ID, description)
         write_object('model', index, _hack.train(input, alphabet))
@@ -32,7 +34,9 @@ class Data:
 
     def add_alphabet(self, alphabet_letters, description):
         if len(set(alphabet_letters)) < len(alphabet_letters):
-            return  'Error# Incorrect alphabet. Alphabet should not contain same symbols'
+            return  ' Error# Incorrect alphabet. Alphabet should not contain same symbols'
+        if len(alphabet_letters) == 0:
+            return ' Error# Incorrect alphabet. Alphabet should contain symbols'
         index = str(len(self.alphabets))
         self.alphabets[index] = description
         alphabet = {'letters' : alphabet_letters, \
