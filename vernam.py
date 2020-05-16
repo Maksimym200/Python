@@ -3,7 +3,6 @@ from alphabet import indexes as letters_indexes
 packet_size = 1024
 
 def encode_symbol(key_s, s):
-    
     if (not key_s.lower() in letters_indexes) or (not s.lower() in letters_indexes)\
        or letters_indexes[s.lower()] ^ letters_indexes[key_s.lower()] >= len(letters):
         return s
