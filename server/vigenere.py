@@ -6,6 +6,7 @@ def encode_symbol(key, s, alphabet):
     else:
         return s
 
+    
 def encode_with_shift(text, key, a, shift = 1):
     encoded_str = []
     index = 0
@@ -14,9 +15,10 @@ def encode_with_shift(text, key, a, shift = 1):
         index = (index + 1) % len(key)
     return "".join(encoded_str)
 
+
 def encode(text, key, alphabet):
     return encode_with_shift(text, key, alphabet)
 
+
 def decode(text, key, alphabet):
     return encode_with_shift(text, key, alphabet, -1)
-
