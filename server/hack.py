@@ -1,7 +1,10 @@
 import json
 from vigenere import encode_symbol
 from collections import defaultdict
+
+
 accuracy = 0.005
+
 
 def get_data_list(text, key_len, alphabet):
         data_list = []
@@ -12,28 +15,28 @@ def get_data_list(text, key_len, alphabet):
                 data_list[i % key_len][text[i]] += 1
         return data_list
 
+
 def get_frequency_data(data, alphabet):
     frequency_data = defaultdict(int)
     data_size = sum(data.values())
     for s in data:
-        frequency_data[s] = (data[s] / data_size)
-    for i in alphabet['letters']:
-        if i not in frequency_data:
-            frequency_data[i] = 0
+        frequency_data[s] = data[s] / data_size
     return frequency_data
+
 
 def index_of_coincidence(frequency_data):
     index = 0
     for s in frequency_data:
-        index += (frequency_data[s] ** 2)
+        index += frequency_data[s] ** 2
     return index
+
 
 def get_correct_frequency_data_list(text, index, alphabet):
     correct_frequency_data_list = []
     current_index = 0
     max_len = len(text) / 2
     key_len = 0
-    while (key_len <= max_len):
+    while key_len <= max_len:
         key_len += 1
         data_list = get_data_list(text, key_len, alphabet)
         frequency_data_list = []
@@ -62,7 +65,7 @@ def get_key(text, model, alphabet):
             current_similarity = 0
             for s in model:
                 current_similarity += abs(frequency_data[encode_symbol(i, s, alphabet)] - model[s])
-            if (current_similarity <= similarity):
+            if current_similarity <= similarity:
                 similarity = current_similarity
                 key_symbol = i
         key.append(key_symbol)
