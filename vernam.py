@@ -1,15 +1,16 @@
 from alphabet import letters
 from alphabet import indexes as letters_indexes
-packet_size = 1024
+from math import log2, floor
+encodable_size = 2 ** floor(log2(len(letters)))
+
 
 def encode_symbol(key_s, s):
-    if (not key_s.lower() in letters_indexes) or (not s.lower() in letters_indexes)\
-       or letters_indexes[s.lower()] ^ letters_indexes[key_s.lower()] >= len(letters):
+    
+    if (not key_s in letters_indexes) or (not s in letters_indexes)\
+       or letters_indexes[s] >= encodable_size or letters_indexes[key_s] >= encodable_size:
         return s
-    elif s in letters_indexes:
-        return letters[letters_indexes[s] ^ letters_indexes[key_s.lower()]]
     else:
-        return letters[letters_indexes[s.lower()] ^ letters_indexes[key_s.lower()]].upper()
+        return letters[letters_indexes[s] ^ letters_indexes[key_s]]
 
 def encode(input, output, key):
     while True:
