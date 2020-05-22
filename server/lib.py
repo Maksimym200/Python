@@ -80,7 +80,7 @@ class Data:
             return ' #Error Alphabet not found'
         if not set(key) <= set(alphabet['letters']):
             return ' #Error Alphabet don\'t support some of Key symbols'
-        f = vigenere.__getattribute__(shift)
+        f = getattr(vigenere, shift)
         return f(input, key, alphabet)
 
     def decode(self, input, key, ID):
