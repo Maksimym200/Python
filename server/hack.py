@@ -7,9 +7,7 @@ accuracy = 0.005
 
 
 def get_data_list(text, key_len, alphabet):
-        data_list = []
-        for i in range(key_len):
-            data_list.append(defaultdict(int))
+        data_list = [defaultdict(int) for i in range(key_len)]
         for i in range(len(text)):
             if text[i] in alphabet['letters']:
                 data_list[i % key_len][text[i]] += 1
