@@ -41,7 +41,7 @@ def add_model():
 def get_alphabet_information():
     ID = str(flask.request.args['ID'])
     alphabet_desc = Data.get_alphabet_description(ID)
-    if alphabet_desc is None:
+    if not alphabet_desc:
         return ' No information found'
     return alphabet_desc
 
