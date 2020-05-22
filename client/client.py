@@ -5,23 +5,14 @@ from sys import stdin, stdout
 
 
 @contextmanager
-def open_input(i):
-    if i == '':
-        print(' - Input:')
-        yield stdin
+def open_stream(stream, mode):
+    if not stream:
+        args = ('Input', stdin) if mode == 'r' else ('Output', stdout) if mode == 'w' else None
+        print(f' - {args[0]}:')
+        yield args[1]
     else:
-        with open(i, 'r') as input:
-            yield input
-
-
-@contextmanager
-def open_output(o):
-    if o == '':
-        print(' - Output:')
-        yield stdout
-    else:
-        with open(o, 'w') as output:
-            yield output
+        with open(stream, mode) as file_stream:
+            yield file_stream
 
 
 def create_main_parser():
@@ -39,36 +30,32 @@ def request_command(main_args, method, command, args):
         return requests.post(address, params = args).text
 
 
-def input_command(main_args, input, method, command, args):
-    with open_input(input) as i:
-        args['input'] = i.read()
+def input_command(main_args, file_input, method, command, args):
+    with open_stream(file_input, 'r') as istream:
+        args['input'] = istream.read()
         return request_command(main_args, method, command, args)
 
 
-def advanced_input(message, t):
-    i = input(message)
+def advanced_input(message, input_type):
+    file_input = input(message)
     try:
-       return t(i)
+       return input_type(file_input)
     except TypeError:
         return None
 
 
-def info(main_args, object):
-    if object not in {'model', 'alphabet'}:
-        return f' Error# Unknown object \'{object}\'. Type \'help\' to get help'
-    ID = advanced_input(f' Print {object} ID:  ', int)
+def info(main_args, obj):
+    if obj not in {'model', 'alphabet'}:
+        return f' Error# Unknown object \'{obj}\'. Type \'help\' to get help'
+    ID = advanced_input(f' Print {obj} ID:  ', int)
     if ID is None:
         return ' Error# Incorrect ID'
-    information = request_command(main_args, 'GET', f'get_{object}_information', dict(ID = ID))
+    information = request_command(main_args, 'GET', f'get_{obj}_information', dict(ID = ID))
     return f' ID {ID}: {information}'
 
 
 def encrypt(main_args, action):
-    if action == 'hack':
-        ID = advanced_input(f' Print model ID:  ', int)
-    else:
-        ID = advanced_input(f' Print alphabet ID:  ', int)
-
+    ID = advanced_input(f' Print {"model" if action == "hack" else "alphabet"} ID:  ', int)
     if ID is None:
         return ' Error# Incorrect ID'
 
@@ -77,58 +64,40 @@ def encrypt(main_args, action):
         if key is None:
             return ' Error# Incorrect key'
 
-    i = input(f' Print name of the file to {action} (Tap Enter to read from console):  ')
+    file_input = input(f' Print name of the file to {action} (Tap Enter to read from console):  ')
     try:
         if action != 'hack':
-            result = input_command(main_args, i, 'GET', action, dict(ID = ID, key = key))
+            result = input_command(main_args, file_input, 'GET', action, dict(ID = ID, key = key))
         else:
-            result = input_command(main_args, i, 'GET', action, dict(ID = ID))
+            result = input_command(main_args, file_input, 'GET', action, dict(ID = ID))
     except FileNotFoundError:
         print(' Error# Input file not found')
 
-    o = input(f' Print name of the file to save the result (Tap Enter to write to console):  ')
+    file_output = input(f' Print name of the file to save the result (Tap Enter to write to console):  ')
     try:
-        with open_output(o) as out:
-            out.write(result)
+        with open_stream(file_output, 'w') as ostream:
+            ostream.write(result)
     except FileNotFoundError:
         print(' Error# Output file not found')
 
 
-def add_alphabet(main_args):
-    desc = str(input(' Print description of the alphabet:  '))
-    i = input(' Print name of the alphabet file (Tap Enter to read from console):  ')
+def add(main_args, obj):
+    ID = 0
+    if obj == 'model':
+        ID = advanced_input(' Print ID of the model\'s alphabet:  ', int)
+        if ID is None:
+            return ' Error# Incorrect ID'
+
+    desc = str(input(f' Print description of the {obj}:  '))
+    file_input = input(f' Print name of the {obj} file (Tap Enter to read from console):  ')
     try:
-        result = input_command(main_args, i, 'POST', 'add_alphabet', dict(description = desc))
+        result = input_command(main_args, file_input, 'POST', f'add_{obj}', dict(description = desc, ID = ID))
     except FileNotFoundError:
         return ' Error# Input file not found'
     if result == '':
-        return ' Error# Incorrect alphabet. Alphabet should not contain same symbols'
+        return ' Error# Incorrect alphabet. Alphabet should not contain same symbols' \
+            if obj == 'alphabet' else ' Error# Alphabet not found'
     return f' Added with ID: {result}'
-
-
-def add_model(main_args):
-    ID = advanced_input(' Print ID of the model\'s alphabet:  ', int)
-    if ID is None:
-        return ' Error# Incorrect ID'
-
-    desc = str(input(' Print description of the model:  '))
-    i = input(' Print name of the model file (Tap Enter to read from console):  ')
-    try:
-        result = input_command(main_args, i, 'POST', 'add_model', dict(description = desc, ID = ID))
-    except FileNotFoundError:
-        return ' Error# Input file not found'
-    if result == '':
-        return ' Error# Alphabet not found'
-    return f' Added with ID: {result}'
-
-
-def add(main_args, object):
-    if object == 'alphabet':
-        return add_alphabet(main_args)
-    elif object == 'model':
-        return add_model(main_args)
-    else:
-        return f' Error# Unknown object \'{object}\'. Type \'help\' to get help'
 
 
 def help():
@@ -183,3 +152,4 @@ if __name__ == '__main__':
         main()
     except requests.exceptions.ConnectionError:
         print(' #Error Server not found')
+                        
