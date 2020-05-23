@@ -59,7 +59,7 @@ def getinfo_model():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host', default='::')
-    parser.add_argument('--port', default=8888, type=int)
+    parser.add_argument('--host')
+    parser.add_argument('--port', type=int)
     args = parser.parse_args()
     app.run(args.host, args.port)
