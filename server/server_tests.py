@@ -3,12 +3,10 @@ import string
 import pytest
 
 
-Data = lib.Data()
-aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
-mID = Data.add_model('model', 'test model', aID)
-
-
 def test_objects():
+    Data = lib.Data()
+    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
+    mID = Data.add_model('model', 'test model', aID)
 
     assert Data.get_alphabet_description(aID) == 'test alphabet'
     aID2 = Data.add_alphabet(string.ascii_lowercase, 'test alphabet 2')
@@ -20,6 +18,8 @@ def test_objects():
 
 
 def test_encode():
+    Data = lib.Data()
+    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
 
     a = Data.encode('abracadabra', 'test', aID)
     assert Data.decode(a, 'test', aID) == 'abracadabra'
@@ -32,12 +32,17 @@ def test_encode():
 
 
 def test_hack():
+    Data = lib.Data()
+    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
+    mID = Data.add_model('model', 'test model', aID)
 
     Data.hack('abracadabra', mID)
     Data.hack('1$#80P', mID)
 
 
 def test_crazy_inputs():
+    Data = lib.Data()
+    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
 
     assert Data.get_alphabet_description('-1') is None
     assert Data.get_alphabet('-1') is None
