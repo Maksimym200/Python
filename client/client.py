@@ -18,8 +18,8 @@ def open_stream(stream, mode):
 
 def create_main_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host', default='localhost')
-    parser.add_argument('--port', default=8888, type=int)
+    parser.add_argument('--host')
+    parser.add_argument('--port', type=int)
     return parser
 
 
