@@ -2,13 +2,14 @@ import requests
 import argparse
 from contextlib import contextmanager
 from sys import stdin, stdout
+from strings import methods, errors, messages, objects
 
 
 @contextmanager
 def open_stream(stream, mode):
     if not stream:
-        args = ('Input', stdin) if mode == 'r' else ('Output', stdout) if mode == 'w' else None
-        print(f' - {args[0]}:')
+        args = (messages._in(), stdin) if mode == 'r' else (messages._out(), stdout) if mode == 'w' else None
+        print(args[0])
         yield args[1]
     else:
         with open(stream, mode) as file_stream:
@@ -23,7 +24,7 @@ def create_main_parser():
 
 
 def request_command(main_args, method, command, args):
-    address = f'http://{main_args.host}:{main_args.port}/{command}'
+    address = messages.address(main_args, command)
     if method == 'GET':
         return requests.get(address, params = args).text
     if method == 'POST':
@@ -40,88 +41,78 @@ def advanced_input(message, input_type):
     file_input = input(message)
     try:
        return input_type(file_input)
-    except TypeError:
+    except ValueError:
         return None
 
 
 def info(main_args, obj):
-    if obj not in {'model', 'alphabet'}:
-        return f' Error# Unknown object \'{obj}\'. Type \'help\' to get help'
-    ID = advanced_input(f' Print {obj} ID:  ', int)
+    if obj not in objects.server_objects():
+        print(errors.unknown_object(obj))
+        print(messages.suggest_help())
+        return
+    ID = advanced_input(messages.print_message(obj, objects.ID()), int)
     if ID is None:
-        return ' Error# Incorrect ID'
-    information = request_command(main_args, 'GET', f'get_{obj}_information', dict(ID = ID))
-    return f' ID {ID}: {information}'
+        print(errors.incorrect_ID())
+        return
+    information = request_command(main_args, 'GET', methods.getinfo(obj), dict(ID = ID))
+    print(information)
 
 
 def encrypt(main_args, action):
-    ID = advanced_input(f' Print {"model" if action == "hack" else "alphabet"} ID:  ', int)
+    ID = advanced_input(messages.print_message(objects.model() if \
+        action == objects.hack() else objects.alphabet(), objects.ID()), int)
     if ID is None:
-        return ' Error# Incorrect ID'
+        print(errors.incorrect_ID())
+        return
 
-    if action != 'hack':
-        key = advanced_input(f' Print key:  ', str)
-        if key is None:
-            return ' Error# Incorrect key'
+    if action != objects.hack():
+        key = input(messages.print_message(objects.key(), None))
 
-    file_input = input(f' Print name of the file to {action} (Tap Enter to read from console):  ')
+    file_input = input(messages.print_input_file(action))
     try:
-        if action != 'hack':
-            result = input_command(main_args, file_input, 'GET', action, dict(ID = ID, key = key))
+        if action != objects.hack():
+            result = input_command(main_args, file_input, 'GET', methods.action(action), dict(ID = ID, key = key))
         else:
-            result = input_command(main_args, file_input, 'GET', action, dict(ID = ID))
+            result = input_command(main_args, file_input, 'GET', methods.action(action), dict(ID = ID))
     except FileNotFoundError:
-        print(' Error# Input file not found')
+        print(errors.no_file_input())
+        return
 
-    file_output = input(f' Print name of the file to save the result (Tap Enter to write to console):  ')
+    file_output = input(messages.print_output_file())
     try:
         with open_stream(file_output, 'w') as ostream:
             ostream.write(result)
     except FileNotFoundError:
-        print(' Error# Output file not found')
+        print(errors.no_file_output())
+        return
 
 
 def add(main_args, obj):
     ID = 0
-    if obj == 'model':
-        ID = advanced_input(' Print ID of the model\'s alphabet:  ', int)
+    if obj == objects.model():
+        ID = advanced_input(messages.print_message(objects.alphabet(), objects.ID()), int)
         if ID is None:
-            return ' Error# Incorrect ID'
+            print(errors.incorrect_ID())
+            return
 
-    desc = str(input(f' Print description of the {obj}:  '))
-    file_input = input(f' Print name of the {obj} file (Tap Enter to read from console):  ')
+    desc = input(messages.print_message(obj, objects.description()))
+    file_input = input(messages.print_object_file(obj))
     try:
-        result = input_command(main_args, file_input, 'POST', f'add_{obj}', dict(description = desc, ID = ID))
+        result = input_command(main_args, file_input, 'POST', methods.add(obj), dict(description = desc, ID = ID))
     except FileNotFoundError:
-        return ' Error# Input file not found'
-    if result == '':
-        return ' Error# Incorrect alphabet. Alphabet should not contain same symbols' \
-            if obj == 'alphabet' else ' Error# Alphabet not found'
-    return f' Added with ID: {result}'
-
-
-def help():
-    print(' Available commands: ')
-    print(' - info {alphabet / model} : get alphabet or model information')
-    print(' - add {alphabet / model} : add alphabet or model')
-    print(' - encode : encode text with vigenere cipher')
-    print(' - decode : decode input with vigenere cipher')
-    print(' - hack : hack encoded text')
-    print(' - exit : exit the program')
+        print(errors.no_file_input())
+        return
+    print(messages.added(result) if result.isdigit() else result)
 
 
 def try_exit():
     while True:
-        answer = input(' Are you sure you want to leave (y/n)?  ')
+        answer = input(messages.leave())
         if answer == 'y':
-            print(' Thanks for using this soft!')
-            print(' If you want to help in the development of this project, please donate!')
             exit()
         elif answer == 'n':
-            print(' Canceled')
             break
-        else:
-            print(' Error# Incorrect input')
+        print()
 
 
 def main():
@@ -129,27 +120,28 @@ def main():
     main_args = main_parser.parse_args()
     while True:
         try:
-            command = input('\n Enter command:  ').split(' ')
+            command = input(messages.enter_command()).split(' ')
             if command[0] == 'info' and len(command) > 1:
-                print(info(main_args, command[1]))
+                info(main_args, command[1])
             elif command[0] == 'add' and len(command) > 1:
-                print(add(main_args, command[1]))
-            elif command[0] in {'encode', 'decode', 'hack'}:
+                add(main_args, command[1])
+            elif command[0] in objects.encrypt_commands():
                 encrypt(main_args, command[0])
             elif command[0] == 'help':
-                help()
+                print(messages.help())
             elif command[0] == 'exit':
                 try_exit()
             else:
-                print(f' Error# Unknown command \'{command[0]}\'. Type \'help\' to get help')
+                print(errors.unknown_command(command[0]))
+                print(messages.suggest_help())
         except KeyboardInterrupt:
             print()
             try_exit()
+        print()
 
 
 if __name__ == '__main__':
     try:
         main()
     except requests.exceptions.ConnectionError:
-        print(' #Error Server not found')
-                        
+        print(errors.no_server())
