@@ -3,23 +3,26 @@ import string
 import pytest
 
 
+test_desc = 'test alphabet'
+
+
 def test_objects():
     Data = lib.Data()
-    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
+    aID = Data.add_alphabet(string.ascii_letters, test_desc)
     mID = Data.add_model('model', 'test model', aID)
 
-    assert Data.get_alphabet_description(aID) == 'test alphabet'
-    aID2 = Data.add_alphabet(string.ascii_lowercase, 'test alphabet 2')
+    assert Data.get_alphabet_description(aID) == test_desc
+    aID2 = Data.add_alphabet(string.ascii_lowercase, test_desc + '2')
 
-    assert Data.get_alphabet_description(aID) == 'test alphabet'
-    assert Data.get_alphabet_description(aID2) == 'test alphabet 2'
+    assert Data.get_alphabet_description(aID) == test_desc
+    assert Data.get_alphabet_description(aID2) == test_desc + '2'
 
     assert Data.get_model_description(mID)[0] == aID
 
 
 def test_encode():
     Data = lib.Data()
-    aID = Data.add_alphabet(string.ascii_letters, 'test alphabet')
+    aID = Data.add_alphabet(string.ascii_letters, test_desc)
 
     a = Data.encode('abracadabra', 'test', aID)
     assert Data.decode(a, 'test', aID) == 'abracadabra'
