@@ -1,5 +1,5 @@
-from alphabet import letters
-from alphabet import indexes as letters_indexes
+from vernam_alphabet import letters
+from vernam_alphabet import indexes as letters_indexes
 from math import log2, floor
 encodable_size = 2 ** floor(log2(len(letters)))
 
